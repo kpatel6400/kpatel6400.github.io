@@ -7,6 +7,15 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-US</language><atom:link href="/project/index.xml" rel="self" type="application/rss+xml" />
     <item>
+      <title>Project 1 Kiran</title>
+      <link>/project/project1/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/project/project1/</guid>
+      <description>knitr::opts_chunk$set(echo = TRUE, eval = TRUE, fig.align = &amp;quot;center&amp;quot;, warning = F, message = F, tidy = TRUE, tidy.opts = list(width.cutoff = 60), R.options = list(max.print = 100)) 0: Introduction (5pts) library(readr) hapiscore_whr_2_ &amp;lt;- read_csv(&amp;quot;hapiscore_whr.csv&amp;quot;) murder_total_deaths_2_ &amp;lt;- read_csv(&amp;quot;murder_total_deaths(2).csv&amp;quot;) income_per_person_gdppercapita_ppp_inflation_adjusted_2_ &amp;lt;- read_csv(&amp;quot;income_per_person_gdppercapita_ppp_inflation_adjusted_2.csv&amp;quot;) For this project, I chose three different datasets. These datasets were: a country’s happiness score, the total deaths by murder in each country, and the average income per person in each country.</description>
+    </item>
+    
+    <item>
       <title>Project 2: Modeling, Testing, and Predicting</title>
       <link>/project/project2/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
