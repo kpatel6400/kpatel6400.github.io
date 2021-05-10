@@ -39,26 +39,5 @@ summary(cars) ## speed dist ## Min. : 4.0 Min. : 2.00 ## 1st Qu.:12.0 1st Qu.: 2
       <description>0. (5 pts)  library(ggplot2) library(cluster) library(plotROC) library(readr) library(tidyverse) library(MASS) library(glmnet) heartfailure &amp;lt;- read_csv(&amp;quot;heartfailure.csv&amp;quot;) The dataset used in this lab has a total of 14 variables and 299 observations. The main variables used in this lab are platelets, deaths, age, smoking, diabetes, and sodium. The variable “platelets” measured the total count of platelets present in each patient’s blood. The “death” variable signified whether the patient had heart failure. “Yes” means the patient died due to heart failure, while “No” means the patient didn’t have heart failure.</description>
     </item>
     
-    <item>
-      <title>Projects</title>
-      <link>/projects/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>/projects/</guid>
-      <description> Check out some of my coding projects below:
- Wrangling &amp;amp; Exploratory Data Analysis
- Modeling, Inference, Prediction
-  -- </description>
-    </item>
-    
-    <item>
-      <title>Resume</title>
-      <link>/resume/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>/resume/</guid>
-      <description>    </description>
-    </item>
-    
   </channel>
 </rss>
