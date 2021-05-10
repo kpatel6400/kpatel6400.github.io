@@ -1,0 +1,390 @@
+---
+title: 'Project 2: Modeling, Testing, and Predicting'
+author: Kiran Patel - kp27886
+date: ''
+output:
+  html_document:
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+hook_output = knit_hooks$get('output')
+knit_hooks$set(output = function(x, options) {
+  # this hook is used only when the linewidth option is not NULL
+  if (!is.null(n <- options$linewidth)) {
+    x = knitr:::split_lines(x)
+    # any lines wider than n should be wrapped
+    if (any(nchar(x) > n)) x = strwrap(x, width = n)
+    x = paste(x, collapse = '\n')
+  }
+  hook_output(x, options)
+})
+
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE,fig.align="center",warning=FALSE,message=FALSE,fig.width=8, fig.height=5, linewidth=60)
+options(tibble.width = 100,width = 100)
+library(tidyverse)
+```
+
+
+- **0. (5 pts)** 
+
+```{r}
+library(ggplot2)
+library(cluster)
+library(plotROC)
+library(readr)
+library(tidyverse)
+library(MASS)
+library(glmnet)
+
+heartfailure <- read_csv("heartfailure.csv")
+
+```
+
+
+*The dataset used in this lab has a total of 14 variables and 299 observations. The main variables used in this lab are platelets, deaths, age, smoking, diabetes, and sodium. The variable “platelets” measured the total count of platelets present in each patient’s blood. The “death” variable signified whether the patient had heart failure. “Yes” means the patient died due to heart failure, while “No” means the patient didn’t have heart failure. The variable “age” reported the patient's age. The variable “smoking” signified if the patient smoked. Diabetes signified if the patient had diabetes. And lastly, the second numerical variable “sodium” represented the patients’ sodium blood levels.* 
+
+- **1. (15 pts)** 
+
+```{r}
+ #MANOVA (1)
+manova <- manova(cbind(age ,sodium, platelets)~ death, data=heartfailure)
+summary(manova)
+```
+*I first conducted a MANOVA test to see if age, sodium levels, and platelets count had a significant effect on death (from heart failure). The results from the test indicate that the response variables signficantly differ by levels of the categorical explanatory variable.*
+
+```{r}
+#UNIVARIATE ANOVA (2,3,4)
+summary.aov(manova)
+```
+*Next, I conduced an ANOVA test for each of the response variables. After looking at the data and ANOVA values, I can conclude that sodium levels and age are significantly different based on whether or not the patients had died from heart failure.*
+
+```{r}
+#POST HOC TEST
+#age (5)
+pairwise.t.test(heartfailure$age, heartfailure$death, p.adj="none")
+
+#sodium levels (6)
+pairwise.t.test(heartfailure$sodium, heartfailure$death, p.adj="none")
+
+#platelets (7)
+pairwise.t.test(heartfailure$platelets, heartfailure$death, p.adj="none")
+```
+
+*Next, I conduced a Post - hoc analysis to find which groups differ. Both, age and sodium levels had p- values less than 0.5. However, when comparing death and platelet level, the p-value was greater than 0.05. Since the p value of 0.4 was greater than 0.05, I can conclude that that platelet amount did significantly differ in patients who did not have heart failure versus in patients who did have heart failure* 
+
+```{r}
+#Type 1 Error 
+1-(1-0.05)^7
+
+#Bonferroni Correction 
+0.05/7
+```
+*The probability of a Type 1 error occurring you is 30.16%. To keep the error at 0.05, the new adjusted significance level should be .007. *
+
+```{r}
+#Adjusted T - tests
+
+#age 
+pairwise.t.test(heartfailure$age, heartfailure$death, p.adj="bonf")
+
+#sodium levels
+pairwise.t.test(heartfailure$sodium, heartfailure$death, p.adj="bonf")
+
+#platelets
+pairwise.t.test(heartfailure$platelets, heartfailure$death, p.adj="bonf")
+
+```
+*Next, I re-performed the Post-HOC tests using the new adjusted (bonferroni correction) significance level. Looking at the data, there was no difference p - values. The MANOVA assumptions were most likely not met, since there are so many assumptions. *
+
+
+- **2. (10 pts)** 
+
+```{r}
+#Mean Difference - since one variable is numeric and the other is categorical
+
+random_dist<-vector()
+for(i in 1:5000){
+newdata<-data.frame(platelets=sample(heartfailure$platelets),death=heartfailure$death)
+random_dist[i]<-mean(newdata[newdata$death =="No",]$platelets )-
+mean(newdata[newdata$death =="Yes",]$platelets)
+}
+```
+
+*Hypothesis: *
+*Null (Ho): The mean blood platelet count is the same in patients with heart failure vs in patients with no heart failure. *
+
+*Alternative (Ha):The mean blood platelet count is not the same in patients with heart failure vs in patients with no heart failure.*
+
+```{r}
+t.test(data=heartfailure, platelets~death)
+
+#plot of distribution 
+hist(random_dist)
+```
+*The P - value for the test is 0.3993, which is greater than alpha (0.5). Since the value is greater than alpha, I would fail to reject the null. This means that the mean blood platelet count is the same in patients with heart failure vs in patients with no heart failure *
+
+
+- **3. (40 pts)** 
+```{r}
+
+#mean centering for sodium levels 
+heartfailure_c <- heartfailure
+heartfailure_c$age <- heartfailure_c$age - mean(heartfailure_c$age, na.rm = T)
+
+
+#Interpreting Coefficient Estimates  
+regression1 <-lm(platelets ~ death * age, data =heartfailure)
+summary(regression1)
+```
+
+*When there is no interaction between death and age, the average platelet count is 325,216.4. For patients who suffer from heart failure (death), their platelet counts decrease by 104,028.6. The coefficient -996.5 represents how much platelet count decreases as age increases every year. When age increases and the patient has heart failure, platelet count increases by 1,536.2.* 
+
+
+
+```{r}
+ggplot(heartfailure, aes(age, platelets, group=death))+
+  geom_point(aes(color=death))+
+geom_smooth(method="lm",se=F,fullrange=T,aes(color=death))+
+  ggtitle("The effect of Death and Age on Platelet Count ") +
+  ylab("Platelet Count")+
+  xlab("Age (years)") +
+  theme_minimal()
+```
+
+```{r}
+
+library(lmtest)
+library(sandwich)
+
+#Assumptions: 
+
+#linearity
+resids <-regression1$residuals
+fitvals <- regression1$fitted.values
+
+ggplot(heartfailure, aes(x=age, y=platelets)) + geom_point() + geom_smooth(method = "lm", se=F) +
+  ggtitle("Linearity Assumption") +
+  xlab("Age")+
+  ylab("Platelet Count")+ 
+  theme_minimal()
+  
+#normality #Ho: true distribution is normal
+ggplot()+geom_histogram(aes(resids), bins=7) + 
+  ggtitle("Normality Assumption")
+shapiro.test(resids)
+
+
+#homoskedasticity using hypothesis test
+bptest(regression1)
+
+```
+
+*The assumptions for linearity was met. However, the assumption of normality wasn't really met since the graph was a bit skewed.After running the Shapiro - Wilk test I was able to conclude that the null hypothesis of homoskedasticity was indeed rejected. The assumption for homoskedasticity was also met, since after running the hypothesis test my p- value (0.8088) was greater than alpha (0.05). Since the p-value was greater, I was able to accept the null hypothesis.* 
+
+```{r}
+#recomputed regression with robust standard errors
+summary(regression1)$coef[,1:2] #uncorrected
+coeftest(regression1, vcov = vcovHC(regression1))[,1:2] 
+
+```
+
+*After recomputing my regression with robust standard errors, the standard errors had increased. *
+
+- **4. (5 pts)** 
+
+```{r}
+samp_distn<-replicate(5000, {
+boot_dat<- boot_dat <-heartfailure_c [sample(nrow(heartfailure_c),replace=TRUE),]
+fit_1<-lm(platelets ~ death * age, data=boot_dat)
+coef(fit_1)
+})
+
+samp_distn%>%t%>%as.data.frame%>%summarize_all(sd)
+
+#Bootstrap residuals 
+
+fit_2<-lm(platelets ~ death * age, data=heartfailure_c)
+resids <-fit_2$residuals
+fitted <- fit_2$fitted.values
+
+resid_resamp<-replicate(5000,{
+new_resids<-sample(resids,replace=TRUE)
+heartfailure_c$new_y<-fitted+new_resids
+fit_2<-lm(new_y ~ death * age, data=heartfailure_c)
+coef(fit_2)
+})
+
+resid_resamp%>%t%>%as.data.frame%>%summarize_all(sd)
+
+```
+*Since my data hadn't passed the normality test, I re-ran my data with bootstrapped standard errors and residual re-sampling. After running both, the standard error had decreased. *
+
+- **5. (30 pts)** 
+```{r}
+library(tidyverse)
+library(lmtest)
+
+heartfailure_c <- heartfailure_c%>%mutate(y=as.numeric(death=="Yes"))
+
+fit_3 <- glm(y ~ platelets + age, data = heartfailure_c, family = binomial(link = "logit"))
+coeftest(fit_3)
+
+exp(-0.00000096617)
+exp( 0.04677338932)
+
+```
+*The odds of death increase 99% for every additional platelet. The odd of death also increases 104.7% as age increases every year*
+
+
+```{r}
+#Confusion Matrix
+
+heartfailure_c$prob <- predict(fit_3, type = "response")
+
+table(predict=as.numeric(heartfailure_c$prob>.5), truth=heartfailure_c$y) %>% addmargins
+
+#accuracy - correctly classified
+(195+17)/299
+
+
+#sensitivity - TPR 
+195/274
+
+
+#specificity - TNR 
+17/25
+
+#precision - PPV
+195/203
+
+```
+*The model was accurate 70.9% of the time. The true positive rate was 0.7116, meaning 71% of heart success rates were accurately classified. The true negative rate was 0.68, meaning the 68% of deaths were correctly classified. Lastly, 96% of the classified deaths were actually deaths.*
+
+
+```{r}
+#GG plot - logodds
+heartfailure_c$logodds <- (heartfailure_c$prob)/(1-heartfailure_c$prob)
+heartfailure_c$logit <- log(heartfailure_c$logodds)
+
+ggplot(heartfailure_c) + geom_density(aes(logit, fill=death), alpha=0.5)
+
+
+#ROC Curve 
+ROC <- ggplot(heartfailure_c) +geom_roc(aes(d=y, m=prob), n.cuts = 0) + geom_segment(aes(x=0, xend=1, y=0, yend=1, xend=1))
+plot(ROC)
+
+#AUC calculation
+calc_auc(ROC)
+```
+*The AUC value is 0.636, since the value is pretty low I can conclude that platelet levels and age aren't good indicators of heart failure.*
+
+- **6. (25 pts)** 
+
+```{r}
+fit_4 <- glm(y ~ platelets + age + sodium + smoking + diabetes, data = heartfailure_c, family = binomial(link = "logit"))
+
+coeftest(fit_4)
+
+
+#confusion matrix
+
+heartfailure_c$prob <- predict(fit_4, type ="response")
+table(predict=as.numeric(heartfailure_c$prob>.5),truth=heartfailure_c$y)%>% addmargins()
+
+#accuracy 
+(188+27)/299
+
+#sensitivity 
+27/96
+
+#specificity
+188/203
+
+#precision
+27/42
+```
+
+*The model is 71.9% accurate, meaning 0.719 heart failures were correct. The true positive rate was 0.28, meaning 28% of heart successes were accurately classified.The true negative rate was 0.926. Lastly, the precision rate was 0.64, which was the proportion of heart failures that were accurately calssified as heart failures.*
+```{r}
+#Class Diagnostics Function
+class_diag<-function(probs,truth){
+tab<-table(factor(probs>.5,levels=c("FALSE","TRUE")),truth)
+acc=sum(diag(tab))/sum(tab)
+sens=tab[2,2]/colSums(tab)[2]
+spec=tab[1,1]/colSums(tab)[1]
+ppv=tab[2,2]/rowSums(tab)[2]
+if(is.numeric(truth)==FALSE & is.logical(truth)==FALSE) truth<-as.numeric(truth)-1
+ord<-order(probs, decreasing=TRUE)
+probs <- probs[ord]; truth <- truth[ord]
+TPR=cumsum(truth)/max(1,sum(truth))
+FPR=cumsum(!truth)/max(1,sum(!truth))
+dup<-c(probs[-1]>=probs[-length(probs)], FALSE)
+TPR<-c(0,TPR[!dup],1); FPR<-c(0,FPR[!dup],1)
+n <- length(TPR)
+auc<- sum( ((TPR[-1]+TPR[-n])/2) * (FPR[-1]-FPR[-n]) )
+}
+
+#K-fold CV
+set.seed(1234)
+k=10
+data1<-heartfailure_c[sample(nrow(heartfailure_c)),]
+folds<-cut(seq(1:nrow(heartfailure)),breaks=k,labels=F)
+diags<-NULL
+for(i in 1:k){
+train<-data1[folds!=i,]
+test<-data1[folds==i,]
+truth<-test$y
+fit<-glm(y~platelets + age,data=train,family="binomial")
+probs<-predict(fit,newdata = test,type="response")
+diags<-rbind(diags,class_diag(probs,truth))
+}
+
+apply(diags,2,mean)
+
+```
+*The AUC is 0.638*
+
+
+```{r}
+
+#LASSO
+fit_5 <- lm(y~., data = heartfailure_c, family="binomial")
+
+y<-as.matrix(heartfailure_c$y)
+x<-model.matrix(fit_5)
+cv <- cv.glmnet(x, y, family="binomial")
+lasso <- glmnet(x, y, family="binomial", lambda = cv$lambda.1se)
+coef(lasso)
+
+```
+
+*The variable death was retained*
+
+```{r}
+#K-fold CV
+
+heartfailure_Kfold <- data.frame(heartfailure_c$death, heartfailure_c$y)
+
+
+data1 <- heartfailure_Kfold[sample(nrow(heartfailure_Kfold)), ]
+folds <- cut(seq(1:nrow(heartfailure_Kfold)), breaks = k, labels = F)
+diags <- NULL
+for (i in 1:k) {
+train <- data1[folds != i, ]
+test <- data1[folds == i, ]
+truth <- test$heartfailure_c.y
+fit <- lm(heartfailure_c.y ~ ., data = train, family = "binomial")
+probs <- predict(fit, newdata = test, type = "response")
+diags <- rbind(diags, class_diag(probs, truth))
+}
+
+apply(diags,2,mean)
+```
+
+
+

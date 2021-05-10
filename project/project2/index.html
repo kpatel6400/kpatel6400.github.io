@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Kiran Patel" />
+    
+    <link rel="shortcut icon" type="image/x-icon" href="../../img/favicon.ico">
+    <title>Project 2: Modeling, Testing, and Predicting</title>
+    <meta name="generator" content="Hugo 0.83.1" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../../css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old" />
+    
+    <!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+    
+  </head>
+
+  <body>
+    <div id="wrap">
+      
+      <nav class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="../../"><i class="fa fa-home"></i></a>
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="navbar-collapse collapse" id="navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+        <li><a href="../../post/">BLOG</a></li>
+        
+        <li><a href="../../projects/">PROJECTS</a></li>
+        
+        <li><a href="../../resume/">RESUME</a></li>
+        
+      
+      </ul>
+    </div>
+  </div>
+</nav>
+
+      <div class="container">
+        <div class="blog-post">
+          <h3>
+            <strong><a href="../../project/project2/">Project 2: Modeling, Testing, and Predicting</a></strong>
+          </h3>
+        </div>
+ 
+<div class="blog-title">
+          <h4>
+         January 1, 0001 
+            &nbsp;&nbsp;
+            
+          </h4>
+        </div>
+
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="blogpost">
+              
+
+
+<ul>
+<li><strong>0. (5 pts)</strong></li>
+</ul>
+<pre class="r"><code>library(ggplot2)
+library(cluster)
+library(plotROC)
+library(readr)
+library(tidyverse)
+library(MASS)
+library(glmnet)
+
+heartfailure &lt;- read_csv(&quot;heartfailure.csv&quot;)</code></pre>
+<p><em>The dataset used in this lab has a total of 14 variables and 299 observations. The main variables used in this lab are platelets, deaths, age, smoking, diabetes, and sodium. The variable “platelets” measured the total count of platelets present in each patient’s blood. The “death” variable signified whether the patient had heart failure. “Yes” means the patient died due to heart failure, while “No” means the patient didn’t have heart failure. The variable “age” reported the patient’s age. The variable “smoking” signified if the patient smoked. Diabetes signified if the patient had diabetes. And lastly, the second numerical variable “sodium” represented the patients’ sodium blood levels.</em></p>
+<ul>
+<li><strong>1. (15 pts)</strong></li>
+</ul>
+<pre class="r"><code> #MANOVA (1)
+manova &lt;- manova(cbind(age ,sodium, platelets)~ death, data=heartfailure)
+summary(manova)</code></pre>
+<pre><code>## Df Pillai approx F num Df den Df Pr(&gt;F)
+## death 1 0.098759 10.775 3 295 9.706e-07 ***
+## Residuals 297
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1</code></pre>
+<p><em>I first conducted a MANOVA test to see if age, sodium levels, and platelets count had a significant effect on death (from heart failure). The results from the test indicate that the response variables signficantly differ by levels of the categorical explanatory variable.</em></p>
+<pre class="r"><code>#UNIVARIATE ANOVA (2,3,4)
+summary.aov(manova)</code></pre>
+<pre><code>## Response age :
+## Df Sum Sq Mean Sq F value Pr(&gt;F)
+## death 1 2714 2714.38 20.436 8.917e-06 ***
+## Residuals 297 39449 132.82
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1
+##
+## Response sodium :
+## Df Sum Sq Mean Sq F value Pr(&gt;F)
+## death 1 221.1 221.084 11.765 0.0006889 ***
+## Residuals 297 5581.0 18.791
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1
+##
+## Response platelets :
+## Df Sum Sq Mean Sq F value Pr(&gt;F)
+## death 1 6.8831e+09 6883065405 0.7189 0.3972
+## Residuals 297 2.8437e+12 9574701084</code></pre>
+<p><em>Next, I conduced an ANOVA test for each of the response variables. After looking at the data and ANOVA values, I can conclude that sodium levels and age are significantly different based on whether or not the patients had died from heart failure.</em></p>
+<pre class="r"><code>#POST HOC TEST
+#age (5)
+pairwise.t.test(heartfailure$age, heartfailure$death, p.adj=&quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  heartfailure$age and heartfailure$death 
+## 
+##     No     
+## Yes 8.9e-06
+## 
+## P value adjustment method: none</code></pre>
+<pre class="r"><code>#sodium levels (6)
+pairwise.t.test(heartfailure$sodium, heartfailure$death, p.adj=&quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  heartfailure$sodium and heartfailure$death 
+## 
+##     No     
+## Yes 0.00069
+## 
+## P value adjustment method: none</code></pre>
+<pre class="r"><code>#platelets (7)
+pairwise.t.test(heartfailure$platelets, heartfailure$death, p.adj=&quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  heartfailure$platelets and heartfailure$death 
+## 
+##     No 
+## Yes 0.4
+## 
+## P value adjustment method: none</code></pre>
+<p><em>Next, I conduced a Post - hoc analysis to find which groups differ. Both, age and sodium levels had p- values less than 0.5. However, when comparing death and platelet level, the p-value was greater than 0.05. Since the p value of 0.4 was greater than 0.05, I can conclude that that platelet amount did significantly differ in patients who did not have heart failure versus in patients who did have heart failure</em></p>
+<pre class="r"><code>#Type 1 Error 
+1-(1-0.05)^7</code></pre>
+<pre><code>## [1] 0.3016627</code></pre>
+<pre class="r"><code>#Bonferroni Correction 
+0.05/7</code></pre>
+<pre><code>## [1] 0.007142857</code></pre>
+<p><em>The probability of a Type 1 error occurring you is 30.16%. To keep the error at 0.05, the new adjusted significance level should be .007. </em></p>
+<pre class="r"><code>#Adjusted T - tests
+
+#age 
+pairwise.t.test(heartfailure$age, heartfailure$death, p.adj=&quot;bonf&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  heartfailure$age and heartfailure$death 
+## 
+##     No     
+## Yes 8.9e-06
+## 
+## P value adjustment method: bonferroni</code></pre>
+<pre class="r"><code>#sodium levels
+pairwise.t.test(heartfailure$sodium, heartfailure$death, p.adj=&quot;bonf&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  heartfailure$sodium and heartfailure$death 
+## 
+##     No     
+## Yes 0.00069
+## 
+## P value adjustment method: bonferroni</code></pre>
+<pre class="r"><code>#platelets
+pairwise.t.test(heartfailure$platelets, heartfailure$death, p.adj=&quot;bonf&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  heartfailure$platelets and heartfailure$death 
+## 
+##     No 
+## Yes 0.4
+## 
+## P value adjustment method: bonferroni</code></pre>
+<p><em>Next, I re-performed the Post-HOC tests using the new adjusted (bonferroni correction) significance level. Looking at the data, there was no difference p - values. The MANOVA assumptions were most likely not met, since there are so many assumptions. </em></p>
+<ul>
+<li><strong>2. (10 pts)</strong></li>
+</ul>
+<pre class="r"><code>#Mean Difference - since one variable is numeric and the other is categorical
+
+random_dist&lt;-vector()
+for(i in 1:5000){
+newdata&lt;-data.frame(platelets=sample(heartfailure$platelets),death=heartfailure$death)
+random_dist[i]&lt;-mean(newdata[newdata$death ==&quot;No&quot;,]$platelets )-
+mean(newdata[newdata$death ==&quot;Yes&quot;,]$platelets)
+}</code></pre>
+<p><em>Hypothesis: </em>
+<em>Null (Ho): The mean blood platelet count is the same in patients with heart failure vs in patients with no heart failure. </em></p>
+<p><em>Alternative (Ha):The mean blood platelet count is not the same in patients with heart failure vs in patients with no heart failure.</em></p>
+<pre class="r"><code>t.test(data=heartfailure, platelets~death)</code></pre>
+<pre><code>##
+## Welch Two Sample t-test
+##
+## data: platelets by death
+## t = 0.84479, df = 184.79, p-value = 0.3993
+## alternative hypothesis: true difference in means is not
+equal to 0
+## 95 percent confidence interval:
+## -13722.84 34275.73
+## sample estimates:
+## mean in group No mean in group Yes
+## 266657.5 256381.0</code></pre>
+<pre class="r"><code>#plot of distribution 
+hist(random_dist)</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-8-1.png" width="768" style="display: block; margin: auto;" />
+<em>The P - value for the test is 0.3993, which is greater than alpha (0.5). Since the value is greater than alpha, I would fail to reject the null. This means that the mean blood platelet count is the same in patients with heart failure vs in patients with no heart failure </em></p>
+<ul>
+<li><strong>3. (40 pts)</strong></li>
+</ul>
+<pre class="r"><code>#mean centering for sodium levels 
+heartfailure_c &lt;- heartfailure
+heartfailure_c$age &lt;- heartfailure_c$age - mean(heartfailure_c$age, na.rm = T)
+
+
+#Interpreting Coefficient Estimates  
+regression1 &lt;-lm(platelets ~ death * age, data =heartfailure)
+summary(regression1)</code></pre>
+<pre><code>##
+## Call:
+## lm(formula = platelets ~ death * age, data =
+heartfailure)
+##
+## Residuals:
+## Min 1Q Median 3Q Max
+## -230358 -54441 -8434 38251 569628
+##
+## Coefficients:
+## Estimate Std. Error t value Pr(&gt;|t|)
+## (Intercept) 325216.4 38587.8 8.428 1.57e-15 ***
+## deathYes -104028.6 63528.4 -1.638 0.103
+## age -996.5 646.2 -1.542 0.124
+## deathYes:age 1536.2 996.5 1.542 0.124
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1
+##
+## Residual standard error: 97710 on 295 degrees of freedom
+## Multiple R-squared: 0.01207, Adjusted R-squared:
+0.002027
+## F-statistic: 1.202 on 3 and 295 DF, p-value: 0.3094</code></pre>
+<p><em>When there is no interaction between death and age, the average platelet count is 325,216.4. For patients who suffer from heart failure (death), their platelet counts decrease by 104,028.6. The coefficient -996.5 represents how much platelet count decreases as age increases every year. When age increases and the patient has heart failure, platelet count increases by 1,536.2.</em></p>
+<pre class="r"><code>ggplot(heartfailure, aes(age, platelets, group=death))+
+  geom_point(aes(color=death))+
+geom_smooth(method=&quot;lm&quot;,se=F,fullrange=T,aes(color=death))+
+  ggtitle(&quot;The effect of Death and Age on Platelet Count &quot;) +
+  ylab(&quot;Platelet Count&quot;)+
+  xlab(&quot;Age (years)&quot;) +
+  theme_minimal()</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-10-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>library(lmtest)
+library(sandwich)
+
+#Assumptions: 
+
+#linearity
+resids &lt;-regression1$residuals
+fitvals &lt;- regression1$fitted.values
+
+ggplot(heartfailure, aes(x=age, y=platelets)) + geom_point() + geom_smooth(method = &quot;lm&quot;, se=F) +
+  ggtitle(&quot;Linearity Assumption&quot;) +
+  xlab(&quot;Age&quot;)+
+  ylab(&quot;Platelet Count&quot;)+ 
+  theme_minimal()</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-11-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#normality #Ho: true distribution is normal
+ggplot()+geom_histogram(aes(resids), bins=7) + 
+  ggtitle(&quot;Normality Assumption&quot;)</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-11-2.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>shapiro.test(resids)</code></pre>
+<pre><code>## 
+##  Shapiro-Wilk normality test
+## 
+## data:  resids
+## W = 0.91518, p-value = 5.765e-12</code></pre>
+<pre class="r"><code>#homoskedasticity using hypothesis test
+bptest(regression1)</code></pre>
+<pre><code>## 
+##  studentized Breusch-Pagan test
+## 
+## data:  regression1
+## BP = 0.969, df = 3, p-value = 0.8088</code></pre>
+<p><em>The assumptions for linearity was met. However, the assumption of normality wasn’t really met since the graph was a bit skewed.After running the Shapiro - Wilk test I was able to conclude that the null hypothesis of homoskedasticity was indeed rejected. The assumption for homoskedasticity was also met, since after running the hypothesis test my p- value (0.8088) was greater than alpha (0.05). Since the p-value was greater, I was able to accept the null hypothesis.</em></p>
+<pre class="r"><code>#recomputed regression with robust standard errors
+summary(regression1)$coef[,1:2] #uncorrected</code></pre>
+<pre><code>##                  Estimate Std. Error
+## (Intercept)   325216.4038 38587.8319
+## deathYes     -104028.6371 63528.4000
+## age             -996.5455   646.2283
+## deathYes:age    1536.1932   996.5231</code></pre>
+<pre class="r"><code>coeftest(regression1, vcov = vcovHC(regression1))[,1:2] </code></pre>
+<pre><code>##                  Estimate Std. Error
+## (Intercept)   325216.4038 48120.1774
+## deathYes     -104028.6371 70567.6463
+## age             -996.5455   793.3294
+## deathYes:age    1536.1932  1107.0013</code></pre>
+<p><em>After recomputing my regression with robust standard errors, the standard errors had increased. </em></p>
+<ul>
+<li><strong>4. (5 pts)</strong></li>
+</ul>
+<pre class="r"><code>samp_distn&lt;-replicate(5000, {
+boot_dat&lt;- boot_dat &lt;-heartfailure_c [sample(nrow(heartfailure_c),replace=TRUE),]
+fit_1&lt;-lm(platelets ~ death * age, data=boot_dat)
+coef(fit_1)
+})
+
+samp_distn%&gt;%t%&gt;%as.data.frame%&gt;%summarize_all(sd)</code></pre>
+<pre><code>##   (Intercept) deathYes      age deathYes:age
+## 1    6794.597 12457.39 773.8064     1079.593</code></pre>
+<pre class="r"><code>#Bootstrap residuals 
+
+fit_2&lt;-lm(platelets ~ death * age, data=heartfailure_c)
+resids &lt;-fit_2$residuals
+fitted &lt;- fit_2$fitted.values
+
+resid_resamp&lt;-replicate(5000,{
+new_resids&lt;-sample(resids,replace=TRUE)
+heartfailure_c$new_y&lt;-fitted+new_resids
+fit_2&lt;-lm(new_y ~ death * age, data=heartfailure_c)
+coef(fit_2)
+})
+
+resid_resamp%&gt;%t%&gt;%as.data.frame%&gt;%summarize_all(sd)</code></pre>
+<pre><code>##   (Intercept) deathYes      age deathYes:age
+## 1    6808.671 12553.57 635.4984     987.2806</code></pre>
+<p><em>Since my data hadn’t passed the normality test, I re-ran my data with bootstrapped standard errors and residual re-sampling. After running both, the standard error had decreased. </em></p>
+<ul>
+<li><strong>5. (30 pts)</strong></li>
+</ul>
+<pre class="r"><code>library(tidyverse)
+library(lmtest)
+
+heartfailure_c &lt;- heartfailure_c%&gt;%mutate(y=as.numeric(death==&quot;Yes&quot;))
+
+fit_3 &lt;- glm(y ~ platelets + age, data = heartfailure_c, family = binomial(link = &quot;logit&quot;))
+coeftest(fit_3)</code></pre>
+<pre><code>##
+## z test of coefficients:
+##
+## Estimate Std. Error z value Pr(&gt;|z|)
+## (Intercept) -5.4640e-01 3.8094e-01 -1.4343 0.1515
+## platelets -9.6617e-07 1.3831e-06 -0.6986 0.4848
+## age 4.6773e-02 1.1086e-02 4.2190 2.454e-05 ***
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1</code></pre>
+<pre class="r"><code>exp(-0.00000096617)</code></pre>
+<pre><code>## [1] 0.999999</code></pre>
+<pre class="r"><code>exp( 0.04677338932)</code></pre>
+<pre><code>## [1] 1.047885</code></pre>
+<p><em>The odds of death increase 99% for every additional platelet. The odd of death also increases 104.7% as age increases every year</em></p>
+<pre class="r"><code>#Confusion Matrix
+
+heartfailure_c$prob &lt;- predict(fit_3, type = &quot;response&quot;)
+
+table(predict=as.numeric(heartfailure_c$prob&gt;.5), truth=heartfailure_c$y) %&gt;% addmargins</code></pre>
+<pre><code>##        truth
+## predict   0   1 Sum
+##     0   195  79 274
+##     1     8  17  25
+##     Sum 203  96 299</code></pre>
+<pre class="r"><code>#accuracy - correctly classified
+(195+17)/299</code></pre>
+<pre><code>## [1] 0.7090301</code></pre>
+<pre class="r"><code>#sensitivity - TPR 
+195/274</code></pre>
+<pre><code>## [1] 0.7116788</code></pre>
+<pre class="r"><code>#specificity - TNR 
+17/25</code></pre>
+<pre><code>## [1] 0.68</code></pre>
+<pre class="r"><code>#precision - PPV
+195/203</code></pre>
+<pre><code>## [1] 0.9605911</code></pre>
+<p><em>The model was accurate 70.9% of the time. The true positive rate was 0.7116, meaning 71% of heart success rates were accurately classified. The true negative rate was 0.68, meaning the 68% of deaths were correctly classified. Lastly, 96% of the classified deaths were actually deaths.</em></p>
+<pre class="r"><code>#GG plot - logodds
+heartfailure_c$logodds &lt;- (heartfailure_c$prob)/(1-heartfailure_c$prob)
+heartfailure_c$logit &lt;- log(heartfailure_c$logodds)
+
+ggplot(heartfailure_c) + geom_density(aes(logit, fill=death), alpha=0.5)</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-16-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#ROC Curve 
+ROC &lt;- ggplot(heartfailure_c) +geom_roc(aes(d=y, m=prob), n.cuts = 0) + geom_segment(aes(x=0, xend=1, y=0, yend=1, xend=1))
+plot(ROC)</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-16-2.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#AUC calculation
+calc_auc(ROC)</code></pre>
+<pre><code>##   PANEL group       AUC
+## 1     1    -1 0.6364943</code></pre>
+<p><em>The AUC value is 0.636, since the value is pretty low I can conclude that platelet levels and age aren’t good indicators of heart failure.</em></p>
+<ul>
+<li><strong>6. (25 pts)</strong></li>
+</ul>
+<pre class="r"><code>fit_4 &lt;- glm(y ~ platelets + age + sodium + smoking + diabetes, data = heartfailure_c, family = binomial(link = &quot;logit&quot;))
+
+coeftest(fit_4)</code></pre>
+<pre><code>##
+## z test of coefficients:
+##
+## Estimate Std. Error z value Pr(&gt;|z|)
+## (Intercept) 1.1967e+01 4.1133e+00 2.9093 0.003622 **
+## platelets -7.8305e-07 1.4214e-06 -0.5509 0.581701
+## age 4.6856e-02 1.1388e-02 4.1145 3.88e-05 ***
+## sodium -9.2123e-02 3.0149e-02 -3.0556 0.002246 **
+## smokingYes -6.7260e-02 2.8299e-01 -0.2377 0.812129
+## diabetesYes 5.3442e-02 2.7138e-01 0.1969 0.843887
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1</code></pre>
+<pre class="r"><code>#confusion matrix
+
+heartfailure_c$prob &lt;- predict(fit_4, type =&quot;response&quot;)
+table(predict=as.numeric(heartfailure_c$prob&gt;.5),truth=heartfailure_c$y)%&gt;% addmargins()</code></pre>
+<pre><code>##        truth
+## predict   0   1 Sum
+##     0   188  69 257
+##     1    15  27  42
+##     Sum 203  96 299</code></pre>
+<pre class="r"><code>#accuracy 
+(188+27)/299</code></pre>
+<pre><code>## [1] 0.7190635</code></pre>
+<pre class="r"><code>#sensitivity 
+27/96</code></pre>
+<pre><code>## [1] 0.28125</code></pre>
+<pre class="r"><code>#specificity
+188/203</code></pre>
+<pre><code>## [1] 0.9261084</code></pre>
+<pre class="r"><code>#precision
+27/42</code></pre>
+<pre><code>## [1] 0.6428571</code></pre>
+<p><em>The model is 71.9% accurate, meaning 0.719 heart failures were correct. The true positive rate was 0.28, meaning 28% of heart successes were accurately classified.The true negative rate was 0.926. Lastly, the precision rate was 0.64, which was the proportion of heart failures that were accurately calssified as heart failures.</em></p>
+<pre class="r"><code>#Class Diagnostics Function
+class_diag&lt;-function(probs,truth){
+tab&lt;-table(factor(probs&gt;.5,levels=c(&quot;FALSE&quot;,&quot;TRUE&quot;)),truth)
+acc=sum(diag(tab))/sum(tab)
+sens=tab[2,2]/colSums(tab)[2]
+spec=tab[1,1]/colSums(tab)[1]
+ppv=tab[2,2]/rowSums(tab)[2]
+if(is.numeric(truth)==FALSE &amp; is.logical(truth)==FALSE) truth&lt;-as.numeric(truth)-1
+ord&lt;-order(probs, decreasing=TRUE)
+probs &lt;- probs[ord]; truth &lt;- truth[ord]
+TPR=cumsum(truth)/max(1,sum(truth))
+FPR=cumsum(!truth)/max(1,sum(!truth))
+dup&lt;-c(probs[-1]&gt;=probs[-length(probs)], FALSE)
+TPR&lt;-c(0,TPR[!dup],1); FPR&lt;-c(0,FPR[!dup],1)
+n &lt;- length(TPR)
+auc&lt;- sum( ((TPR[-1]+TPR[-n])/2) * (FPR[-1]-FPR[-n]) )
+}
+
+#K-fold CV
+set.seed(1234)
+k=10
+data1&lt;-heartfailure_c[sample(nrow(heartfailure_c)),]
+folds&lt;-cut(seq(1:nrow(heartfailure)),breaks=k,labels=F)
+diags&lt;-NULL
+for(i in 1:k){
+train&lt;-data1[folds!=i,]
+test&lt;-data1[folds==i,]
+truth&lt;-test$y
+fit&lt;-glm(y~platelets + age,data=train,family=&quot;binomial&quot;)
+probs&lt;-predict(fit,newdata = test,type=&quot;response&quot;)
+diags&lt;-rbind(diags,class_diag(probs,truth))
+}
+
+apply(diags,2,mean)</code></pre>
+<pre><code>## [1] 0.638586</code></pre>
+<p><em>The AUC is 0.638</em></p>
+<pre class="r"><code>#LASSO
+fit_5 &lt;- lm(y~., data = heartfailure_c, family=&quot;binomial&quot;)
+
+y&lt;-as.matrix(heartfailure_c$y)
+x&lt;-model.matrix(fit_5)
+cv &lt;- cv.glmnet(x, y, family=&quot;binomial&quot;)
+lasso &lt;- glmnet(x, y, family=&quot;binomial&quot;, lambda = cv$lambda.1se)
+coef(lasso)</code></pre>
+<pre><code>## 14 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
+##                    s0
+## (Intercept) -7.741008
+## (Intercept)  .       
+## age          .       
+## anaemiaYes   .       
+## diabetesYes  .       
+## highBPYes    .       
+## platelets    .       
+## sodium       .       
+## genderYes    .       
+## smokingYes   .       
+## deathYes    14.732673
+## prob         .       
+## logodds      .       
+## logit        .</code></pre>
+<p><em>The variable death was retained</em></p>
+<pre class="r"><code>#K-fold CV
+
+heartfailure_Kfold &lt;- data.frame(heartfailure_c$death, heartfailure_c$y)
+
+
+data1 &lt;- heartfailure_Kfold[sample(nrow(heartfailure_Kfold)), ]
+folds &lt;- cut(seq(1:nrow(heartfailure_Kfold)), breaks = k, labels = F)
+diags &lt;- NULL
+for (i in 1:k) {
+train &lt;- data1[folds != i, ]
+test &lt;- data1[folds == i, ]
+truth &lt;- test$heartfailure_c.y
+fit &lt;- lm(heartfailure_c.y ~ ., data = train, family = &quot;binomial&quot;)
+probs &lt;- predict(fit, newdata = test, type = &quot;response&quot;)
+diags &lt;- rbind(diags, class_diag(probs, truth))
+}
+
+apply(diags,2,mean)</code></pre>
+<pre><code>## [1] 1</code></pre>
+
+            
+        <hr>         <div class="related-posts">
+                <h5>Related Posts</h5>
+                
+              </div> 
+            </div>
+          </div>
+
+   <hr>  <div class="disqus">
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+
+    (function() {
+      
+      
+      if (window.location.hostname == "localhost")
+        return;
+
+      var disqus_shortname = '';
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  <a href="http://disqus.com/" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div> 
+        </div>
+      </div>
+    </div>
+
+    
+    <footer>
+  <div id="footer">
+    <div class="container">
+      <p class="text-muted">&copy; All rights reserved. Powered by <a href="https://gohugo.io/">Hugo</a> and
+      <a href="http://www.github.com/nurlansu/hugo-sustain/">sustain</a> with ♥</p>
+    </div>
+  </div>
+</footer>
+<div class="footer"></div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="../../js/docs.min.js"></script>
+<script src="../../js/main.js"></script>
+
+<script src="../../js/ie10-viewport-bug-workaround.js"></script>
+
+
+    
+  </body>
+</html>

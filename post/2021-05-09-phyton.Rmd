@@ -1,0 +1,46 @@
+---
+title: Phyton
+author: Kiran Patel
+date: '2021-05-09'
+slug: phyton
+categories: []
+tags: []
+description: ''
+---
+
+PYTHON ROCKS
+
+
+![](/post/2021-05-09-phyton_files/python.jpeg)
+
+Python is an amazing program since it can be used for many things. One really cool feature about python is its ability to "talk" to R. This will be demonstrated below: 
+
+First what you need to do is load the "reticulate" library in R.
+Next define a word as an object, in this case i'm defining the word "Python" as magic. 
+```{R}
+
+library(reticulate)
+
+magic<-"Python"
+```
+
+Next, do the same but in a python environment. 
+Next, you can then use the print function to grab objects from your R environment. 
+Finally, run your code!
+
+```{python}
+
+magic= "Rocks!"
+print(r.magic, magic)
+
+```
+
+To see more cool things R can do, click on the links below!
+
+
+
+
+[Link to project 1](/project/project1/)
+
+
+[Link to project 2](/project/project2/)
